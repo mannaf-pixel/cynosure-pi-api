@@ -93,6 +93,7 @@ Route::prefix('v1')->middleware('auth:api')->group(function () {
     Route::get('/pi/{id}',           [PIController::class, 'show']);
     Route::put('/pi/{id}',           [PIController::class, 'update'])->middleware('role:admin,pi_creator');
     Route::post('/pi/{id}/submit',   [PIController::class, 'submit'])->middleware('role:admin,pi_creator');
+    Route::delete('/pi/{id}',        [PIController::class, 'destroy'])->middleware('role:admin,pi_creator');
     Route::post('/pi/{id}/approve',         [PIController::class, 'approve'])->middleware('role:md,ceo,admin');
     Route::post('/pi/{id}/confirm-payment', [PIController::class, 'confirmPayment'])->middleware('role:admin,ceo');
     Route::post('/pi/{id}/dispatch',        [PIController::class, 'dispatch'])->middleware('role:admin,dispatch_manager');

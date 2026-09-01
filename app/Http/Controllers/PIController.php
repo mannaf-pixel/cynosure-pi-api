@@ -444,6 +444,22 @@ class PIController extends Controller
         return response()->json(['success' => true, 'data' => $pi]);
     }
 
+    // PI Delete — sirf Draft
+    public function destroy($id)
+    {
+        $pi   = PiMaster::findOrFail($id);
+        $user = auth('api')->user();
+
+        if (!in_array($pi->status, ['draft', 'rejected'])) {
+            return response()->json(['success' => false, 'message' => 'Sirf Draft ya Rejected PI delete ki ja sakti hai.'], 422);
+        }
+
+        PiItem::where('pi_id', $pi->id)->delete();
+        $pi->delete();
+
+        return response()->json(['success' => true, 'message' => 'PI delete ho gayi.']);
+    }
+
     // Dispatch Manager — Dispatch karo
     public function dispatch(Request $request, $id)
     {
@@ -470,18 +486,19 @@ class PIController extends Controller
         }
 
         $pi->update([
-            'status'            => 'dispatched',
-            'transport_company' => $request->transport_company,
-            'vehicle_number'    => $request->vehicle_number,
-            'driver_name'       => $request->driver_name,
-            'driver_phone'      => $request->driver_phone,
-            'lr_number'         => $request->lr_number,
-            'freight_amount'    => $request->freight_amount ?? 0,
-            'dispatch_note'     => $request->dispatch_note,
-            'dispatch_photo'    => $dispatchPhoto,
-            'transport_copy'    => $transportCopy,
-            'dispatched_at'     => now(),
-            'remarks'           => $pi->remarks . ' | Dispatched by: ' . $user->name . ' on ' . now()->format('d-M-Y H:i'),
+            'status'                  => 'dispatched',
+            'transport_company'       => $request->transport_company,
+            'vehicle_number'          => $request->vehicle_number,
+            'driver_name'             => $request->driver_name,
+            'driver_phone'            => $request->driver_phone,
+            'lr_number'               => $request->lr_number,
+            'freight_amount'          => $request->freight_amount ?? 0,
+            'dispatch_note'           => $request->dispatch_note,
+            'dispatch_photo'          => $dispatchPhoto,
+            'transport_copy'          => $transportCopy,
+            'dispatched_at'           => now(),
+            'expected_dispatch_date'  => $request->expected_dispatch_date ?? null,
+            'remarks'                 => $pi->remarks . ' | Dispatched by: ' . $user->name . ' on ' . now()->format('d-M-Y H:i'),
         ]);
 
         // Notify PI creator
