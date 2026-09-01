@@ -199,9 +199,7 @@ class PIController extends Controller
     {
         $request->validate([
             'customer_id'  => 'required|exists:customers,id',
-            'profile_type' => 'required|in:white,color',
             'items'        => 'required|array|min:1',
-            'items.*.product_id' => 'required|exists:products,id',
         ]);
 
         $companyId = $this->getCompanyId();
@@ -213,7 +211,7 @@ class PIController extends Controller
 
         DB::beginTransaction();
         try {
-            $calc   = $this->calcItems($request->items, $request->profile_type, $company);
+            $calc   = $this->calcItems($request->items, $request->profile_type ?? 'white', $company);
             $totals = $this->calcTotals($calc['subtotal'], $request);
 
             $pi = PiMaster::create([
@@ -266,9 +264,7 @@ class PIController extends Controller
 
         $request->validate([
             'customer_id'  => 'required|exists:customers,id',
-            'profile_type' => 'required|in:white,color',
             'items'        => 'required|array|min:1',
-            'items.*.product_id' => 'required|exists:products,id',
         ]);
 
         $company = Company::find($pi->company_id);
