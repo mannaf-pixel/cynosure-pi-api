@@ -410,6 +410,44 @@ class PIController extends Controller
         return response()->json(['success' => true, 'data' => $pi]);
     }
 
+    // Dispatch Manager — Delivery Schedule karo
+    public function scheduleDelivery(Request $request, $id)
+    {
+        $pi   = PiMaster::findOrFail($id);
+        $user = auth('api')->user();
+
+        if (!in_array($user->role, ['admin', 'dispatch_manager'])) {
+            return response()->json(['success' => false, 'message' => 'Permission nahi hai.'], 403);
+        }
+
+        if ($pi->status !== 'payment_confirmed') {
+            return response()->json(['success' => false, 'message' => 'Sirf Payment Confirmed PI schedule ki ja sakti hai.'], 422);
+        }
+
+        $request->validate(['expected_dispatch_date' => 'required|date']);
+
+        $pi->update([
+            'status'                 => 'delivery_scheduled',
+            'expected_dispatch_date' => $request->expected_dispatch_date,
+            'delivery_scheduled_at'  => now(),
+        ]);
+
+        $creator = \App\Models\User::find($pi->created_by);
+        if ($creator) {
+            \App\Models\Notification::create([
+                'company_id' => $pi->company_id,
+                'user_id'    => $creator->id,
+                'pi_id'      => $pi->id,
+                'type'       => 'pi_approved',
+                'title'      => 'Delivery Scheduled',
+                'message'    => 'PI ' . $pi->pi_number . ' delivery scheduled for ' . $request->expected_dispatch_date . '.',
+                'is_read'    => false,
+            ]);
+        }
+
+        return response()->json(['success' => true, 'data' => $pi->fresh()]);
+    }
+
     // Admin — Payment Confirm karo
     public function confirmPayment(Request $request, $id)
     {

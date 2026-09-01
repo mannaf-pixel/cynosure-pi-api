@@ -43,6 +43,7 @@ class PiMaster extends Model
         'transport_copy',
         'dispatched_at',
         'expected_dispatch_date',
+        'delivery_scheduled_at',
     ];
 
     protected $casts = [
@@ -66,6 +67,7 @@ class PiMaster extends Model
         'transport_copy',
         'dispatched_at',
         'expected_dispatch_date',
+        'delivery_scheduled_at',
     ];
 
     public function customer()
