@@ -125,4 +125,10 @@ Route::prefix('v1')->middleware('auth:api')->group(function () {
         Route::get('/dispatch',       [\App\Http\Controllers\ReportController::class, 'dispatch']);
         Route::get('/salespersonwise', [\App\Http\Controllers\ReportController::class, 'salespersonwise']);
     });
+
+    // Hardware Products
+    Route::get('/hardware',              [\App\Http\Controllers\HardwareProductController::class, 'index']);
+    Route::post('/hardware',             [\App\Http\Controllers\HardwareProductController::class, 'store'])->middleware('role:admin');
+    Route::put('/hardware/{id}',         [\App\Http\Controllers\HardwareProductController::class, 'update'])->middleware('role:admin');
+    Route::delete('/hardware/{id}',      [\App\Http\Controllers\HardwareProductController::class, 'destroy'])->middleware('role:admin');
 });
