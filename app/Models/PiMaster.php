@@ -31,6 +31,7 @@ class PiMaster extends Model
         'received_in',
         'payment_note',
         'brand',
+        'color_name',
         'transport_company',
         'vehicle_number',
         'driver_name',

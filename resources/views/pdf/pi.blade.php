@@ -19,14 +19,21 @@ body { font-family: DejaVu Sans, sans-serif; font-size:11px; color:#1a1a1a; }
 .box-title { font-size:10px; font-weight:bold; color:{{ $company['color'] }}; text-transform:uppercase; border-bottom:1px solid #eee; padding-bottom:3px; margin-bottom:4px; }
 .box-company { font-size:11px; font-weight:bold; }
 .box-sub { font-size:10px; color:#555; line-height:1.6; margin-top:2px; }
+.section-title { font-size:10px; font-weight:bold; color:#fff; padding:5px 8px; margin-bottom:0; }
+.section-white { background:#1E6FD9; }
+.section-color { background:#E65C00; }
+.section-hardware { background:#2E7D32; }
 .items-table { width:100%; border-collapse:collapse; margin-bottom:10px; }
 .items-table th { background:{{ $company['color'] }}; color:#fff; font-size:10px; padding:6px 7px; text-align:left; }
 .items-table th.right { text-align:right; }
 .items-table td { padding:5px 7px; font-size:10px; border-bottom:1px solid #eee; }
 .items-table td.right { text-align:right; }
 .items-table tr:nth-child(even) td { background:#f8f9fa; }
+.white-header th { background:#1E6FD9; }
+.color-header th { background:#E65C00; }
+.hardware-header th { background:#2E7D32; }
 .code { font-weight:bold; color:{{ $company['color'] }}; }
-.totals-table { width:280px; float:right; border-collapse:collapse; border:1px solid #ddd; margin-bottom:10px; }
+.totals-table { width:300px; float:right; border-collapse:collapse; border:1px solid #ddd; margin-bottom:10px; }
 .totals-table td { padding:5px 10px; font-size:10px; border-bottom:1px solid #eee; }
 .totals-table td.right { text-align:right; }
 .clear { clear:both; }
@@ -37,6 +44,7 @@ body { font-family: DejaVu Sans, sans-serif; font-size:11px; color:#1a1a1a; }
 .sign-box { float:right; width:200px; text-align:center; border:1px solid #ddd; padding:8px; margin-bottom:10px; }
 .sign-space { height:40px; border-bottom:1px solid #aaa; margin-bottom:5px; }
 .footer { border-top:1px solid #ddd; padding-top:6px; text-align:center; font-size:9px; color:#999; }
+.internal-tag { background:#f3e5f5; border:1px solid #9c27b0; color:#6a1b9a; font-size:9px; padding:2px 6px; display:inline-block; margin-top:3px; }
 </style>
 </head>
 <body>
@@ -60,8 +68,8 @@ body { font-family: DejaVu Sans, sans-serif; font-size:11px; color:#1a1a1a; }
     <td style="width:25%;vertical-align:top;text-align:right">
       <div class="pi-number">{{ $pi->pi_number }}</div>
       <div class="pi-date">Date: {{ \Carbon\Carbon::parse($pi->created_at)->format('d-M-Y') }}</div>
-      @if(!$is_plastrong)<div class="pi-date">Type: {{ ucfirst($pi->profile_type) }} Profile</div>@endif
       @if($pi->status === 'ceo_approved')<div style="margin-top:4px;background:#e8f5e9;color:#2e7d32;font-size:10px;font-weight:bold;padding:2px 8px;text-align:center;">CEO APPROVED</div>@endif
+      @if($show_weight)<div class="internal-tag">INTERNAL COPY</div>@endif
     </td>
   </tr>
 </table>
@@ -105,6 +113,7 @@ body { font-family: DejaVu Sans, sans-serif; font-size:11px; color:#1a1a1a; }
 @endif
 
 @if($is_plastrong)
+{{-- Plastrong — single table --}}
 <table class="items-table">
   <thead>
     <tr>
@@ -131,23 +140,31 @@ body { font-family: DejaVu Sans, sans-serif; font-size:11px; color:#1a1a1a; }
     @endforeach
   </tbody>
 </table>
+
 @else
-<table class="items-table">
+
+{{-- WHITE PROFILES SECTION --}}
+@php $whiteItems = $pi->items->filter(fn($i) => $i->item_type !== 'hardware' && $i->profile_type_snap === 'white'); @endphp
+@if($whiteItems->count() > 0)
+<div style="background:#1E6FD9;color:#fff;font-size:10px;font-weight:bold;padding:5px 8px;margin-bottom:0;">
+  🏗️ WHITE PROFILE
+</div>
+<table class="items-table" style="margin-bottom:6px;">
   <thead>
-    <tr>
+    <tr class="white-header">
       <th style="width:4%">#</th>
       <th style="width:10%">Code</th>
-      <th style="width:26%">Product Description</th>
-      <th class="right" style="width:7%">Bundles</th>
+      <th style="width:28%">Product Description</th>
+      <th class="right" style="width:8%">Bundles</th>
       <th class="right" style="width:10%">Length (m)</th>
       <th class="right" style="width:7%">Pieces</th>
       @if($show_weight)<th class="right" style="width:10%">Wt. (kg)</th>@endif
       <th class="right" style="width:10%">Rate/m</th>
-      <th class="right" style="width:16%">Amount (Rs.)</th>
+      <th class="right" style="width:13%">Amount (Rs.)</th>
     </tr>
   </thead>
   <tbody>
-    @foreach($pi->items as $index => $item)
+    @foreach($whiteItems as $index => $item)
     <tr>
       <td>{{ $index + 1 }}</td>
       <td class="code">{{ $item->product_code_snap }}</td>
@@ -161,14 +178,114 @@ body { font-family: DejaVu Sans, sans-serif; font-size:11px; color:#1a1a1a; }
     </tr>
     @endforeach
   </tbody>
+  @if($show_weight)
+  <tfoot>
+    <tr>
+      <td colspan="{{ $show_weight ? 6 : 5 }}" style="text-align:right;font-size:9px;color:#555;padding:4px 7px;">White Total Weight:</td>
+      <td class="right" style="font-weight:bold;font-size:10px;">{{ number_format($whiteItems->sum('total_weight'), 3) }} kg</td>
+      <td></td>
+      @if($show_weight)<td class="right" style="font-weight:bold;">
+        @php $whiteTotal = $whiteItems->sum('line_total'); $whiteWeight = $whiteItems->sum('total_weight'); @endphp
+        {{ $whiteWeight > 0 ? 'Rs.'.number_format($whiteTotal/$whiteWeight, 2).'/kg' : '-' }}
+      </td>@endif
+      <td></td>
+    </tr>
+  </tfoot>
+  @endif
 </table>
+@endif
+
+{{-- COLOR PROFILES SECTION --}}
+@php $colorItems = $pi->items->filter(fn($i) => $i->item_type !== 'hardware' && $i->profile_type_snap === 'color'); @endphp
+@if($colorItems->count() > 0)
+<div style="background:#E65C00;color:#fff;font-size:10px;font-weight:bold;padding:5px 8px;margin-bottom:0;">
+  🎨 COLOR PROFILE{{ $pi->color_name ? ' — ' . strtoupper($pi->color_name) : '' }}
+</div>
+<table class="items-table" style="margin-bottom:6px;">
+  <thead>
+    <tr>
+      <th style="width:4%;background:#E65C00;">#</th>
+      <th style="width:10%;background:#E65C00;">Code</th>
+      <th style="width:28%;background:#E65C00;">Product Description</th>
+      <th class="right" style="width:8%;background:#E65C00;">Bundles</th>
+      <th class="right" style="width:10%;background:#E65C00;">Length (m)</th>
+      <th class="right" style="width:7%;background:#E65C00;">Pieces</th>
+      @if($show_weight)<th class="right" style="width:10%;background:#E65C00;">Wt. (kg)</th>@endif
+      <th class="right" style="width:10%;background:#E65C00;">Rate/m</th>
+      <th class="right" style="width:13%;background:#E65C00;">Amount (Rs.)</th>
+    </tr>
+  </thead>
+  <tbody>
+    @foreach($colorItems as $index => $item)
+    <tr>
+      <td>{{ $index + 1 }}</td>
+      <td class="code" style="color:#E65C00;">{{ $item->product_code_snap }}</td>
+      <td>{{ $item->product_name_snap }}</td>
+      <td class="right">{{ $item->bundle_qty_ordered }}</td>
+      <td class="right">{{ number_format($item->total_length, 2) }}</td>
+      <td class="right">{{ $item->total_pieces }}</td>
+      @if($show_weight)<td class="right">{{ number_format($item->total_weight, 3) }}</td>@endif
+      <td class="right">{{ number_format($item->unit_rate_snap, 2) }}</td>
+      <td class="right">{{ number_format($item->line_total, 2) }}</td>
+    </tr>
+    @endforeach
+  </tbody>
+  @if($show_weight)
+  <tfoot>
+    <tr>
+      <td colspan="{{ $show_weight ? 6 : 5 }}" style="text-align:right;font-size:9px;color:#555;padding:4px 7px;">Color Total Weight:</td>
+      <td class="right" style="font-weight:bold;font-size:10px;">{{ number_format($colorItems->sum('total_weight'), 3) }} kg</td>
+      <td></td>
+      @if($show_weight)<td class="right" style="font-weight:bold;">
+        @php $colorTotal = $colorItems->sum('line_total'); $colorWeight = $colorItems->sum('total_weight'); @endphp
+        {{ $colorWeight > 0 ? 'Rs.'.number_format($colorTotal/$colorWeight, 2).'/kg' : '-' }}
+      </td>@endif
+      <td></td>
+    </tr>
+  </tfoot>
+  @endif
+</table>
+@endif
+
+{{-- HARDWARE SECTION --}}
+@php $hwItems = $pi->items->filter(fn($i) => $i->item_type === 'hardware'); @endphp
+@if($hwItems->count() > 0)
+<div style="background:#2E7D32;color:#fff;font-size:10px;font-weight:bold;padding:5px 8px;margin-bottom:0;">
+  🔧 HARDWARE & ACCESSORIES
+</div>
+<table class="items-table" style="margin-bottom:6px;">
+  <thead>
+    <tr>
+      <th style="width:5%;background:#2E7D32;">#</th>
+      <th style="width:10%;background:#2E7D32;">Code</th>
+      <th style="width:40%;background:#2E7D32;">Item Description</th>
+      <th class="right" style="width:15%;background:#2E7D32;">Unit</th>
+      <th class="right" style="width:10%;background:#2E7D32;">Qty</th>
+      <th class="right" style="width:10%;background:#2E7D32;">Rate</th>
+      <th class="right" style="width:10%;background:#2E7D32;">Amount (Rs.)</th>
+    </tr>
+  </thead>
+  <tbody>
+    @foreach($hwItems as $index => $item)
+    <tr>
+      <td>{{ $index + 1 }}</td>
+      <td class="code" style="color:#2E7D32;">{{ $item->product_code_snap }}</td>
+      <td>{{ $item->hardware_name_snap }}</td>
+      <td class="right capitalize">{{ $item->hardware_unit_snap }}</td>
+      <td class="right">{{ number_format($item->quantity, 2) }}</td>
+      <td class="right">{{ number_format($item->unit_rate_snap, 2) }}</td>
+      <td class="right">{{ number_format($item->line_total, 2) }}</td>
+    </tr>
+    @endforeach
+  </tbody>
+</table>
+@endif
+
 @endif
 
 <table class="totals-table">
   @if($is_plastrong)
   <tr><td>Total Kg</td><td class="right">{{ number_format($pi->items->sum('total_weight'), 3) }} kg</td></tr>
-  @elseif($show_weight)
-  <tr><td>Total Weight</td><td class="right">{{ number_format($pi->items->sum('total_weight'), 3) }} kg</td></tr>
   @endif
   <tr><td>Subtotal</td><td class="right">Rs. {{ number_format($pi->subtotal, 2) }}</td></tr>
   @if($pi->discount_pct > 0)
