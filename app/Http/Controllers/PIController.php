@@ -55,26 +55,56 @@ class PIController extends Controller
         $itemsData = [];
 
         foreach ($requestItems as $index => $item) {
-            $product = Product::findOrFail($item['product_id']);
+            $itemType = $item['item_type'] ?? 'profile';
+
+            // Hardware item
+            if ($itemType === 'hardware') {
+                $hardware  = \App\Models\HardwareProduct::findOrFail($item['hardware_product_id']);
+                $quantity  = $item['quantity'] ?? 0;
+                $rate      = $hardware->rate;
+                $lineTotal = $quantity * $rate;
+                $subtotal += $lineTotal;
+
+                $itemsData[] = [
+                    'item_type'           => 'hardware',
+                    'product_id'          => null,
+                    'hardware_product_id' => $hardware->id,
+                    'hardware_name_snap'  => $hardware->name,
+                    'hardware_unit_snap'  => $hardware->unit,
+                    'product_code_snap'   => $hardware->code,
+                    'product_name_snap'   => $hardware->name,
+                    'unit_rate_snap'      => $rate,
+                    'quantity'            => $quantity,
+                    'bundle_qty_ordered'  => 0,
+                    'total_length'        => 0,
+                    'total_pieces'        => 0,
+                    'total_weight'        => 0,
+                    'line_total'          => round($lineTotal, 2),
+                    'sort_order'          => $index,
+                    'profile_length_snap'   => 0,
+                    'weight_per_meter_snap' => 0,
+                ];
+                continue;
+            }
+
+            $product      = Product::findOrFail($item['product_id']);
+            $itemProfType = $item['profile_type'] ?? $profileType;
 
             // Per Meter pricing (Cynosure)
             if ($company->pricing_mode === 'per_meter') {
-                // Brand ke hisaab se rate select karo
                 $brand = request()->input('brand', 'cynosure');
                 if ($brand === 'sinewy') {
-                    $rate = $profileType === 'white' ? $product->sinewy_white_rate : $product->sinewy_color_rate;
+                    $rate = $itemProfType === 'white' ? $product->sinewy_white_rate : $product->sinewy_color_rate;
                 } elseif ($brand === 'assre_plasto') {
-                    $rate = $profileType === 'white' ? $product->assre_white_rate : $product->assre_color_rate;
+                    $rate = $itemProfType === 'white' ? $product->assre_white_rate : $product->assre_color_rate;
                 } else {
-                    $rate = $profileType === 'white' ? $product->white_rate : $product->color_rate;
+                    $rate = $itemProfType === 'white' ? $product->white_rate : $product->color_rate;
                 }
-                if ($profileType === 'white') {
-                    // White — bundle based
+                if ($itemProfType === 'white') {
                     $bundleQty   = $item['bundle_qty_ordered'] ?? 1;
                     $totalPieces = $bundleQty * $product->bundle_qty;
                     $totalLength = $bundleQty * $product->bundle_qty * $product->profile_length;
                 } else {
-                    // Color — pieces based
                     $totalPieces = $item['total_pieces'] ?? 0;
                     $bundleQty   = ceil($totalPieces / $product->bundle_qty);
                     $totalLength = $totalPieces * $product->profile_length;
@@ -82,7 +112,7 @@ class PIController extends Controller
                 $totalWeight = $totalLength * ($product->weight_per_meter ?? 0);
                 $lineTotal   = $totalLength * $rate;
             }
-            // Per Kg pricing (Plastrong) — manual entry
+            // Per Kg pricing (Plastrong)
             else {
                 $rate        = $item['unit_rate'] ?? 0;
                 $totalPieces = $item['total_pieces'] ?? 0;
@@ -90,14 +120,18 @@ class PIController extends Controller
                 $totalLength = 0;
                 $lineTotal   = $totalWeight * $rate;
                 $bundleQty   = 1;
+                $itemProfType = 'white';
             }
 
             $subtotal += $lineTotal;
 
             $itemsData[] = [
+                'item_type'             => 'profile',
                 'product_id'            => $product->id,
+                'hardware_product_id'   => null,
                 'product_code_snap'     => $product->product_code,
                 'product_name_snap'     => $product->product_name,
+                'profile_type_snap'     => $itemProfType,
                 'unit_rate_snap'        => $rate,
                 'profile_length_snap'   => $product->profile_length,
                 'weight_per_meter_snap' => $product->weight_per_meter ?? 0,
