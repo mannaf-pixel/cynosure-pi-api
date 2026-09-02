@@ -16,6 +16,7 @@ class PiItem extends Model
         'hardware_name_snap',
         'hardware_unit_snap',
         'profile_type_snap',
+        'color_name',
         'product_code_snap',
         'product_name_snap',
         'unit_rate_snap',

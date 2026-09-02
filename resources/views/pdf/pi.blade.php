@@ -231,9 +231,21 @@ body { font-family: DejaVu Sans, sans-serif; font-size:11px; color:#1a1a1a; }
 @endif
 @endif
 
-{{-- COLOR PROFILE SECTION --}}
+{{-- COLOR PROFILE SECTIONS — har color group alag --}}
 @if($colorItems->count() > 0)
-<div class="section-bar" style="background:#E65C00;margin-top:8px;">🎨 COLOR PROFILE{{ $pi->color_name ? ' — ' . strtoupper($pi->color_name) : '' }}</div>
+@php
+  $colorGroups = $colorItems->groupBy(function($item) {
+    return $item->color_name ? strtoupper($item->color_name) : 'COLOR';
+  });
+@endphp
+@foreach($colorGroups as $colorLabel => $groupItems)
+@php
+  $groupSubtotal = $groupItems->sum('line_total');
+  $groupWeight   = $groupItems->sum('total_weight');
+  $groupAfterDiscount = $totalSubtotal > 0 ? $groupSubtotal - ($discountAmt * ($groupSubtotal / $totalSubtotal)) : $groupSubtotal;
+  $groupKgRate = $groupWeight > 0 ? round($groupAfterDiscount / $groupWeight, 2) : 0;
+@endphp
+<div class="section-bar" style="background:#E65C00;margin-top:8px;">🎨 COLOR PROFILE — {{ $colorLabel }}</div>
 <table class="items-table">
   <thead>
     <tr style="background:#E65C00;">
@@ -249,7 +261,7 @@ body { font-family: DejaVu Sans, sans-serif; font-size:11px; color:#1a1a1a; }
     </tr>
   </thead>
   <tbody>
-    @foreach($colorItems->values() as $index => $item)
+    @foreach($groupItems->values() as $index => $item)
     <tr>
       <td>{{ $index + 1 }}</td>
       <td style="font-weight:bold;color:#E65C00;">{{ $item->product_code_snap }}</td>
@@ -267,21 +279,22 @@ body { font-family: DejaVu Sans, sans-serif; font-size:11px; color:#1a1a1a; }
 @if($show_weight)
 <table style="width:100%;border-collapse:collapse;margin-bottom:2px;background:#fff3e0;">
   <tr>
-    <td style="padding:4px 8px;font-size:10px;color:#BF360C;">Color Subtotal: <strong>Rs.{{ number_format($colorSubtotal,2) }}</strong></td>
-    <td style="padding:4px 8px;font-size:10px;color:#BF360C;">Total Length: <strong>{{ number_format($colorItems->sum('total_length'),2) }}m</strong></td>
-    <td style="padding:4px 8px;font-size:10px;color:#BF360C;">Total Weight: <strong>{{ number_format($colorWeight,3) }} kg</strong></td>
-    <td style="padding:4px 8px;font-size:10px;color:#BF360C;text-align:right;">Eff. Rate/kg (after discount): <strong>Rs.{{ number_format($colorKgRate,2) }}/kg</strong></td>
+    <td style="padding:4px 8px;font-size:10px;color:#BF360C;">{{ $colorLabel }} Subtotal: <strong>Rs.{{ number_format($groupSubtotal,2) }}</strong></td>
+    <td style="padding:4px 8px;font-size:10px;color:#BF360C;">Total Length: <strong>{{ number_format($groupItems->sum('total_length'),2) }}m</strong></td>
+    <td style="padding:4px 8px;font-size:10px;color:#BF360C;">Total Weight: <strong>{{ number_format($groupWeight,3) }} kg</strong></td>
+    <td style="padding:4px 8px;font-size:10px;color:#BF360C;text-align:right;">Eff. Rate/kg (after discount): <strong>Rs.{{ number_format($groupKgRate,2) }}/kg</strong></td>
   </tr>
 </table>
 @else
 <table style="width:100%;border-collapse:collapse;margin-bottom:2px;background:#fff3e0;">
   <tr>
-    <td style="padding:4px 8px;font-size:10px;color:#BF360C;">Color Subtotal: <strong>Rs.{{ number_format($colorSubtotal,2) }}</strong></td>
-    <td style="padding:4px 8px;font-size:10px;color:#BF360C;">Total Length: <strong>{{ number_format($colorItems->sum('total_length'),2) }}m</strong></td>
-    <td style="padding:4px 8px;font-size:10px;color:#BF360C;text-align:right;">Total Pieces: <strong>{{ $colorItems->sum('total_pieces') }}</strong></td>
+    <td style="padding:4px 8px;font-size:10px;color:#BF360C;">{{ $colorLabel }} Subtotal: <strong>Rs.{{ number_format($groupSubtotal,2) }}</strong></td>
+    <td style="padding:4px 8px;font-size:10px;color:#BF360C;">Total Length: <strong>{{ number_format($groupItems->sum('total_length'),2) }}m</strong></td>
+    <td style="padding:4px 8px;font-size:10px;color:#BF360C;text-align:right;">Total Pieces: <strong>{{ $groupItems->sum('total_pieces') }}</strong></td>
   </tr>
 </table>
 @endif
+@endforeach
 @endif
 
 {{-- HARDWARE SECTION --}}

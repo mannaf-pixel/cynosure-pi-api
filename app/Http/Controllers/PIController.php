@@ -132,6 +132,7 @@ class PIController extends Controller
                 'product_code_snap'     => $product->product_code,
                 'product_name_snap'     => $product->product_name,
                 'profile_type_snap'     => $itemProfType,
+                'color_name'            => $itemProfType === 'color' ? ($item['color_name'] ?? null) : null,
                 'unit_rate_snap'        => $rate,
                 'profile_length_snap'   => $product->profile_length,
                 'weight_per_meter_snap' => $product->weight_per_meter ?? 0,
