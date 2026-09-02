@@ -16,6 +16,7 @@ class PiMaster extends Model
         'status',
         'transport_charge',
         'insurance_charge',
+        'insurance_pct',
         'subtotal',
         'gst_amount',
         'grand_total',

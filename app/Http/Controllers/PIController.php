@@ -151,15 +151,16 @@ class PIController extends Controller
     private function calcTotals(float $subtotal, Request $request): array
     {
         $transport      = $request->transport_charge ?? 0;
-        $insurance      = $request->insurance_charge ?? 0;
+        $insurancePct   = $request->insurance_pct ?? 0;
         $discountPct    = $request->discount_pct ?? 0;
         $discountAmount = round($subtotal * $discountPct / 100, 2);
         $afterDiscount  = $subtotal - $discountAmount;
+        $insurance      = round($afterDiscount * $insurancePct / 100, 2);
         $taxableAmount  = $afterDiscount + $transport + $insurance;
         $gstAmount      = round($taxableAmount * 0.18, 2);
         $grandTotal     = round($taxableAmount + $gstAmount, 2);
 
-        return compact('transport', 'insurance', 'discountPct', 'discountAmount', 'gstAmount', 'grandTotal');
+        return compact('transport', 'insurance', 'insurancePct', 'discountPct', 'discountAmount', 'gstAmount', 'grandTotal');
     }
 
     public function index(Request $request)
@@ -226,6 +227,7 @@ class PIController extends Controller
                 'status'           => 'draft',
                 'transport_charge' => $totals['transport'],
                 'insurance_charge' => $totals['insurance'],
+                'insurance_pct'    => $totals['insurancePct'],
                 'discount_pct'     => $totals['discountPct'],
                 'discount_amount'  => $totals['discountAmount'],
                 'subtotal'         => round($calc['subtotal'], 2),
@@ -287,6 +289,7 @@ class PIController extends Controller
                 'status'           => 'draft',
                 'transport_charge' => $totals['transport'],
                 'insurance_charge' => $totals['insurance'],
+                'insurance_pct'    => $totals['insurancePct'],
                 'discount_pct'     => $totals['discountPct'],
                 'discount_amount'  => $totals['discountAmount'],
                 'subtotal'         => round($calc['subtotal'], 2),
