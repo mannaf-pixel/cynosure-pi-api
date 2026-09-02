@@ -154,8 +154,9 @@ class PIController extends Controller
         $discountPct    = $request->discount_pct ?? 0;
         $discountAmount = round($subtotal * $discountPct / 100, 2);
         $afterDiscount  = $subtotal - $discountAmount;
-        $gstAmount      = round($afterDiscount * 0.18, 2);
-        $grandTotal     = round($afterDiscount + $transport + $insurance + $gstAmount, 2);
+        $taxableAmount  = $afterDiscount + $transport + $insurance;
+        $gstAmount      = round($taxableAmount * 0.18, 2);
+        $grandTotal     = round($taxableAmount + $gstAmount, 2);
 
         return compact('transport', 'insurance', 'discountPct', 'discountAmount', 'gstAmount', 'grandTotal');
     }
