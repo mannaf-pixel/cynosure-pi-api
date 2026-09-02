@@ -185,14 +185,16 @@ body { font-family: DejaVu Sans, sans-serif; font-size:11px; color:#1a1a1a; }
   <thead>
     <tr style="background:#1E6FD9;">
       <th style="width:4%">#</th>
-      <th style="width:10%">Code</th>
-      <th style="width:30%">Product Description</th>
-      <th class="right" style="width:8%">Bundles</th>
-      <th class="right" style="width:10%">Length (m)</th>
-      <th class="right" style="width:7%">Pieces</th>
-      @if($show_weight)<th class="right" style="width:10%">Wt. (kg)</th>@endif
-      <th class="right" style="width:10%">Rate/m</th>
-      <th class="right" style="width:11%">Amount (Rs.)</th>
+      <th style="width:9%">Code</th>
+      <th style="width:24%">Product Description</th>
+      <th class="right" style="width:7%">Bundles</th>
+      <th class="right" style="width:9%">Length (m)</th>
+      <th class="right" style="width:6%">Pieces</th>
+      @if($show_weight)<th class="right" style="width:8%">Wt. (kg)</th>@endif
+      <th class="right" style="width:7%">MRP/m</th>
+      <th class="right" style="width:6%">Disc%</th>
+      <th class="right" style="width:8%">Net/m</th>
+      <th class="right" style="width:10%">Amount (Rs.)</th>
     </tr>
   </thead>
   <tbody>
@@ -205,6 +207,8 @@ body { font-family: DejaVu Sans, sans-serif; font-size:11px; color:#1a1a1a; }
       <td class="right">{{ number_format($item->total_length, 2) }}</td>
       <td class="right">{{ $item->total_pieces }}</td>
       @if($show_weight)<td class="right">{{ number_format($item->total_weight, 3) }}</td>@endif
+      <td class="right">{{ number_format($item->mrp_rate_snap ?? $item->unit_rate_snap, 2) }}</td>
+      <td class="right">{{ $discountPct }}%</td>
       <td class="right">{{ number_format($item->unit_rate_snap, 2) }}</td>
       <td class="right">{{ number_format($item->line_total, 2) }}</td>
     </tr>
@@ -250,14 +254,16 @@ body { font-family: DejaVu Sans, sans-serif; font-size:11px; color:#1a1a1a; }
   <thead>
     <tr style="background:#E65C00;">
       <th style="width:4%">#</th>
-      <th style="width:10%">Code</th>
-      <th style="width:30%">Product Description</th>
-      <th class="right" style="width:8%">Bundles</th>
-      <th class="right" style="width:10%">Length (m)</th>
-      <th class="right" style="width:7%">Pieces</th>
-      @if($show_weight)<th class="right" style="width:10%">Wt. (kg)</th>@endif
-      <th class="right" style="width:10%">Rate/m</th>
-      <th class="right" style="width:11%">Amount (Rs.)</th>
+      <th style="width:9%">Code</th>
+      <th style="width:24%">Product Description</th>
+      <th class="right" style="width:7%">Bundles</th>
+      <th class="right" style="width:9%">Length (m)</th>
+      <th class="right" style="width:6%">Pieces</th>
+      @if($show_weight)<th class="right" style="width:8%">Wt. (kg)</th>@endif
+      <th class="right" style="width:7%">MRP/m</th>
+      <th class="right" style="width:6%">Disc%</th>
+      <th class="right" style="width:8%">Net/m</th>
+      <th class="right" style="width:10%">Amount (Rs.)</th>
     </tr>
   </thead>
   <tbody>
@@ -270,6 +276,8 @@ body { font-family: DejaVu Sans, sans-serif; font-size:11px; color:#1a1a1a; }
       <td class="right">{{ number_format($item->total_length, 2) }}</td>
       <td class="right">{{ $item->total_pieces }}</td>
       @if($show_weight)<td class="right">{{ number_format($item->total_weight, 3) }}</td>@endif
+      <td class="right">{{ number_format($item->mrp_rate_snap ?? $item->unit_rate_snap, 2) }}</td>
+      <td class="right">{{ $discountPct }}%</td>
       <td class="right">{{ number_format($item->unit_rate_snap, 2) }}</td>
       <td class="right">{{ number_format($item->line_total, 2) }}</td>
     </tr>
@@ -358,10 +366,7 @@ body { font-family: DejaVu Sans, sans-serif; font-size:11px; color:#1a1a1a; }
   @if($is_plastrong)
   <tr><td>Total Kg</td><td class="right">{{ number_format($pi->items->sum('total_weight'), 3) }} kg</td></tr>
   @endif
-  <tr><td>Subtotal</td><td class="right">Rs. {{ number_format($pi->subtotal, 2) }}</td></tr>
-  @if($pi->discount_pct > 0)
-  <tr><td style="color:#2e7d32;">Discount ({{ $pi->discount_pct }}%)</td><td class="right" style="color:#2e7d32;">- Rs. {{ number_format($pi->discount_amount, 2) }}</td></tr>
-  @endif
+  <tr><td>Subtotal (after {{ $pi->discount_pct }}% discount)</td><td class="right">Rs. {{ number_format($pi->subtotal, 2) }}</td></tr>
   <tr><td>Transport Charge</td><td class="right">Rs. {{ number_format($pi->transport_charge, 2) }}</td></tr>
   <tr><td>Insurance Charge</td><td class="right">Rs. {{ number_format($pi->insurance_charge, 2) }}</td></tr>
   <tr><td>GST @ 18%</td><td class="right">Rs. {{ number_format($pi->gst_amount, 2) }}</td></tr>

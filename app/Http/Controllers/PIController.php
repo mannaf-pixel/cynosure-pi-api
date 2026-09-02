@@ -73,7 +73,8 @@ class PIController extends Controller
                     'hardware_unit_snap'  => $hardware->unit,
                     'product_code_snap'   => $hardware->code,
                     'product_name_snap'   => $hardware->name,
-                    'unit_rate_snap'      => $rate,
+                    'unit_rate_snap'      => $netRate,
+                'mrp_rate_snap'       => $rate,
                     'quantity'            => $quantity,
                     'bundle_qty_ordered'  => 0,
                     'total_length'        => 0,
@@ -109,8 +110,10 @@ class PIController extends Controller
                     $bundleQty   = ceil($totalPieces / $product->bundle_qty);
                     $totalLength = $totalPieces * $product->profile_length;
                 }
-                $totalWeight = $totalLength * ($product->weight_per_meter ?? 0);
-                $lineTotal   = $totalLength * $rate;
+                $totalWeight      = $totalLength * ($product->weight_per_meter ?? 0);
+                $discountPctItem  = request()->input('discount_pct', 0);
+                $netRate          = round($rate * (1 - $discountPctItem / 100), 2);
+                $lineTotal        = round($totalLength * $netRate, 2);
             }
             // Per Kg pricing (Plastrong)
             else {
@@ -153,8 +156,8 @@ class PIController extends Controller
         $transport      = $request->transport_charge ?? 0;
         $insurancePct   = $request->insurance_pct ?? 0;
         $discountPct    = $request->discount_pct ?? 0;
-        $discountAmount = round($subtotal * $discountPct / 100, 2);
-        $afterDiscount  = $subtotal - $discountAmount;
+        $discountAmount = 0; // Already applied per item
+        $afterDiscount  = $subtotal; // Already discounted
         $insurance      = round($afterDiscount * $insurancePct / 100, 2);
         $taxableAmount  = $afterDiscount + $transport + $insurance;
         $gstAmount      = round($taxableAmount * 0.18, 2);

@@ -20,6 +20,7 @@ class PiItem extends Model
         'product_code_snap',
         'product_name_snap',
         'unit_rate_snap',
+        'mrp_rate_snap',
         'profile_length_snap',
         'bundle_qty_ordered',
         'total_length',
