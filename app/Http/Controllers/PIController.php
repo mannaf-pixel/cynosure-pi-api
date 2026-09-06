@@ -118,6 +118,7 @@ class PIController extends Controller
             // Per Kg pricing (Plastrong)
             else {
                 $rate        = $item['unit_rate'] ?? 0;
+                $netRate     = $rate;
                 $totalPieces = $item['total_pieces'] ?? 0;
                 $totalWeight = $item['total_weight'] ?? 0;
                 $totalLength = 0;
