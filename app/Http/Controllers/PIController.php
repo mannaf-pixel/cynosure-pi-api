@@ -111,7 +111,8 @@ class PIController extends Controller
                     $totalLength = $totalPieces * $product->profile_length;
                 }
                 $totalWeight      = $totalLength * ($product->weight_per_meter ?? 0);
-                $discountPctItem  = request()->input('discount_pct', 0);
+                $discountPctItem  = $item['discount_pct'] ?? request()->input('white_discount_pct', 0);
+                if ($itemProfType === 'color') $discountPctItem = $item['discount_pct'] ?? request()->input('color_discount_pct', 0);
                 $netRate          = $rate * (1 - $discountPctItem / 100);
                 $lineTotal        = round($totalLength * $netRate, 2);
             }
@@ -139,6 +140,7 @@ class PIController extends Controller
                 'color_name'            => $itemProfType === 'color' ? ($item['color_name'] ?? null) : null,
                 'unit_rate_snap'        => $netRate,
                 'mrp_rate_snap'         => $rate,
+                'item_discount_pct'     => $discountPctItem,
                 'profile_length_snap'   => $product->profile_length,
                 'weight_per_meter_snap' => $product->weight_per_meter ?? 0,
                 'bundle_qty_ordered'    => $bundleQty,
@@ -157,15 +159,18 @@ class PIController extends Controller
     {
         $transport      = $request->transport_charge ?? 0;
         $insurancePct   = $request->insurance_pct ?? 0;
-        $discountPct    = $request->discount_pct ?? 0;
-        $discountAmount = 0; // Already applied per item
-        $afterDiscount  = $subtotal; // Already discounted
-        $insurance      = round($afterDiscount * $insurancePct / 100, 2);
-        $taxableAmount  = $afterDiscount + $transport + $insurance;
-        $gstAmount      = round($taxableAmount * 0.18, 2);
-        $grandTotal     = round($taxableAmount + $gstAmount, 2);
+        $discountPct      = $request->discount_pct ?? 0;
+        $cdDiscountPct    = $request->cd_discount_pct ?? 0;
+        $discountAmount   = 0;
+        $afterDiscount    = $subtotal;
+        $insurance        = round($afterDiscount * $insurancePct / 100, 2);
+        $taxableAmount    = $afterDiscount + $transport + $insurance;
+        $gstAmount        = round($taxableAmount * 0.18, 2);
+        $beforeCd         = round($taxableAmount + $gstAmount, 2);
+        $cdDiscountAmount = round($beforeCd * $cdDiscountPct / 100, 2);
+        $grandTotal       = round($beforeCd - $cdDiscountAmount, 2);
 
-        return compact('transport', 'insurance', 'insurancePct', 'discountPct', 'discountAmount', 'gstAmount', 'grandTotal');
+        return compact('transport', 'insurance', 'insurancePct', 'discountPct', 'discountAmount', 'cdDiscountPct', 'cdDiscountAmount', 'gstAmount', 'grandTotal');
     }
 
     public function index(Request $request)
@@ -233,8 +238,13 @@ class PIController extends Controller
                 'transport_charge' => $totals['transport'],
                 'insurance_charge' => $totals['insurance'],
                 'insurance_pct'    => $totals['insurancePct'],
-                'discount_pct'     => $totals['discountPct'],
-                'discount_amount'  => $totals['discountAmount'],
+                'discount_pct'          => $totals['discountPct'],
+                'white_discount_pct'    => $request->white_discount_pct ?? 0,
+                'color_discount_pct'    => $request->color_discount_pct ?? 0,
+                'hardware_discount_pct' => $request->hardware_discount_pct ?? 0,
+                'cd_discount_pct'       => $totals['cdDiscountPct'],
+                'cd_discount_amount'    => $totals['cdDiscountAmount'],
+                'discount_amount'       => $totals['discountAmount'],
                 'subtotal'         => round($calc['subtotal'], 2),
                 'gst_amount'       => $totals['gstAmount'],
                 'grand_total'      => $totals['grandTotal'],
@@ -295,8 +305,13 @@ class PIController extends Controller
                 'transport_charge' => $totals['transport'],
                 'insurance_charge' => $totals['insurance'],
                 'insurance_pct'    => $totals['insurancePct'],
-                'discount_pct'     => $totals['discountPct'],
-                'discount_amount'  => $totals['discountAmount'],
+                'discount_pct'          => $totals['discountPct'],
+                'white_discount_pct'    => $request->white_discount_pct ?? 0,
+                'color_discount_pct'    => $request->color_discount_pct ?? 0,
+                'hardware_discount_pct' => $request->hardware_discount_pct ?? 0,
+                'cd_discount_pct'       => $totals['cdDiscountPct'],
+                'cd_discount_amount'    => $totals['cdDiscountAmount'],
+                'discount_amount'       => $totals['discountAmount'],
                 'subtotal'         => round($calc['subtotal'], 2),
                 'gst_amount'       => $totals['gstAmount'],
                 'grand_total'      => $totals['grandTotal'],
