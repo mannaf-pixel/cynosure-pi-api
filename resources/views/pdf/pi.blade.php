@@ -208,7 +208,7 @@ body { font-family: DejaVu Sans, sans-serif; font-size:11px; color:#1a1a1a; }
       <td class="right">{{ $item->total_pieces }}</td>
       @if($show_weight)<td class="right">{{ number_format($item->total_weight, 3) }}</td>@endif
       <td class="right">{{ number_format($item->mrp_rate_snap ?? $item->unit_rate_snap, 2) }}</td>
-      <td class="right">{{ $discountPct }}%</td>
+      <td class="right">{{ number_format($item->item_discount_pct ?? 0, 0) }}%</td>
       <td class="right">{{ number_format($item->unit_rate_snap, 2) }}</td>
       <td class="right">{{ number_format($item->line_total, 2) }}</td>
     </tr>
@@ -292,7 +292,7 @@ body { font-family: DejaVu Sans, sans-serif; font-size:11px; color:#1a1a1a; }
       <td class="right">{{ $item->total_pieces }}</td>
       @if($show_weight)<td class="right">{{ number_format($item->total_weight, 3) }}</td>@endif
       <td class="right">{{ number_format($item->mrp_rate_snap ?? $item->unit_rate_snap, 2) }}</td>
-      <td class="right">{{ $discountPct }}%</td>
+      <td class="right">{{ number_format($item->item_discount_pct ?? 0, 0) }}%</td>
       <td class="right">{{ number_format($item->unit_rate_snap, 2) }}</td>
       <td class="right">{{ number_format($item->line_total, 2) }}</td>
     </tr>
