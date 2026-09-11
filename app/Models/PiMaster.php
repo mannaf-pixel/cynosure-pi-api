@@ -49,6 +49,9 @@ class PiMaster extends Model
         'transport_copy',
         'dispatched_at',
         'expected_dispatch_date',
+        'stock_status',
+        'production_status',
+        'schedule_remarks',
         'delivery_scheduled_at',
     ];
 
@@ -73,6 +76,9 @@ class PiMaster extends Model
         'transport_copy',
         'dispatched_at',
         'expected_dispatch_date',
+        'stock_status',
+        'production_status',
+        'schedule_remarks',
         'delivery_scheduled_at',
     ];
 
