@@ -507,14 +507,16 @@ class PIController extends Controller
         return response()->json(['success' => true, 'data' => $pi]);
     }
 
-    // PI Delete — sirf Draft
+    // PI Delete — Admin ko sab, others sirf Draft/Rejected
     public function destroy($id)
     {
         $pi   = PiMaster::findOrFail($id);
         $user = auth('api')->user();
 
-        if (!in_array($pi->status, ['draft', 'rejected'])) {
-            return response()->json(['success' => false, 'message' => 'Sirf Draft ya Rejected PI delete ki ja sakti hai.'], 422);
+        if (!$user->is_super_admin && $user->role !== 'admin') {
+            if (!in_array($pi->status, ['draft', 'rejected'])) {
+                return response()->json(['success' => false, 'message' => 'Sirf Draft ya Rejected PI delete ki ja sakti hai.'], 422);
+            }
         }
 
         PiItem::where('pi_id', $pi->id)->delete();
