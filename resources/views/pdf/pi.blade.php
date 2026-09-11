@@ -381,10 +381,16 @@ body { font-family: DejaVu Sans, sans-serif; font-size:11px; color:#1a1a1a; }
   @if($is_plastrong)
   <tr><td>Total Kg</td><td class="right">{{ number_format($pi->items->sum('total_weight'), 3) }} kg</td></tr>
   @endif
-  <tr><td>Subtotal (after {{ $pi->discount_pct }}% discount)</td><td class="right">Rs. {{ number_format($pi->subtotal, 2) }}</td></tr>
+  <tr><td>Subtotal</td><td class="right">Rs. {{ number_format($pi->subtotal, 2) }}</td></tr>
   <tr><td>Transport Charge</td><td class="right">Rs. {{ number_format($pi->transport_charge, 2) }}</td></tr>
   <tr><td>Insurance Charge</td><td class="right">Rs. {{ number_format($pi->insurance_charge, 2) }}</td></tr>
   <tr><td>GST @ 18%</td><td class="right">Rs. {{ number_format($pi->gst_amount, 2) }}</td></tr>
+  @if($pi->cd_discount_pct > 0)
+  <tr>
+    <td style="color:#7B1FA2;font-weight:bold;">CD Discount ({{ number_format($pi->cd_discount_pct, 2) }}%)</td>
+    <td class="right" style="color:#7B1FA2;font-weight:bold;">- Rs. {{ number_format($pi->cd_discount_amount, 2) }}</td>
+  </tr>
+  @endif
   <tr>
     <td style="background:{{ $company['color'] }};color:#fff;font-weight:bold;padding:6px 10px;">GRAND TOTAL</td>
     <td class="right" style="background:{{ $company['color'] }};color:#fff;font-weight:bold;padding:6px 10px;">Rs. {{ number_format($pi->grand_total, 2) }}</td>
