@@ -250,24 +250,45 @@ class ReportController extends Controller
         $from = $request->from ?? now()->startOfMonth()->toDateString();
         $to   = $request->to ?? now()->toDateString();
 
-        $query = PiMaster::select(
-                DB::raw('COALESCE(NULLIF(salesperson_name,""), "Unassigned") as salesperson_name'),
-                DB::raw('COUNT(*) as total_pi'),
-                DB::raw('SUM(grand_total) as total_value')
-            )
+        // Fetch all PIs with filters
+        $piQuery = PiMaster::with('customer')
             ->whereBetween(DB::raw('DATE(created_at)'), [$from, $to]);
+        if ($companyId)         $piQuery->where('company_id', $companyId);
+        if ($request->brand)    $piQuery->where('brand', $request->brand);
+        if ($request->status)   $piQuery->where('status', $request->status);
+        if ($request->customer_id) $piQuery->where('customer_id', $request->customer_id);
+        if ($request->amount_min)  $piQuery->where('grand_total', '>=', $request->amount_min);
+        if ($request->amount_max)  $piQuery->where('grand_total', '<=', $request->amount_max);
 
-        if ($companyId) $query->where('company_id', $companyId);
-        if ($request->brand)  $query->where('brand', $request->brand);
-        if ($request->status) $query->where('status', $request->status);
+        $allPis = $piQuery->orderBy('created_at', 'desc')->get();
 
-        $data = $query->groupBy(DB::raw('COALESCE(NULLIF(salesperson_name,""), "Unassigned")'))
-            ->orderBy('total_value', 'desc')
-            ->get();
+        // Filter by salesperson name if provided
+        if ($request->salesperson) {
+            $allPis = $allPis->filter(function($pi) use ($request) {
+                return stripos($pi->salesperson_name ?? 'Unassigned', $request->salesperson) !== false;
+            });
+        }
+
+        // Group by salesperson
+        $grouped = $allPis->groupBy(function($pi) {
+            return $pi->salesperson_name ?: 'Unassigned';
+        });
+
+        $data = $grouped->map(function($pis, $name) {
+            return [
+                'salesperson_name'  => $name,
+                'total_pi'         => $pis->count(),
+                'total_value'      => $pis->sum('grand_total'),
+                'approved_value'   => $pis->whereIn('status', ['ceo_approved','payment_confirmed','delivery_scheduled','dispatched'])->sum('grand_total'),
+                'pending_value'    => $pis->whereIn('status', ['md_pending','ceo_pending'])->sum('grand_total'),
+                'dispatched_value' => $pis->where('status', 'dispatched')->sum('grand_total'),
+                'pis'             => $pis->values(),
+            ];
+        })->values()->sortByDesc('total_value')->values();
 
         $summary = [
-            'total_pi'    => $data->sum('total_pi'),
-            'total_value' => $data->sum('total_value'),
+            'total_pi'    => $allPis->count(),
+            'total_value' => $allPis->sum('grand_total'),
         ];
 
         return response()->json(['success' => true, 'data' => $data, 'summary' => $summary]);
