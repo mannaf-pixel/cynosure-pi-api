@@ -67,7 +67,7 @@ class PIController extends Controller
 
                 $itemsData[] = [
                     'item_type'           => 'hardware',
-                    'product_id'          => null,
+                    'product_id'          => $hardware->id,
                     'hardware_product_id' => $hardware->id,
                     'hardware_name_snap'  => $hardware->name,
                     'hardware_unit_snap'  => $hardware->unit,
@@ -112,7 +112,7 @@ class PIController extends Controller
                 }
                 $totalWeight      = $totalLength * ($product->weight_per_meter ?? 0);
                 $discountPctItem  = request()->input('discount_pct', 0);
-                $netRate          = round($rate * (1 - $discountPctItem / 100));
+                $netRate          = $rate * (1 - $discountPctItem / 100);
                 $lineTotal        = round($totalLength * $netRate, 2);
             }
             // Per Kg pricing (Plastrong)
