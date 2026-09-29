@@ -113,7 +113,7 @@ class PIController extends Controller
                 $totalWeight      = $totalLength * ($product->weight_per_meter ?? 0);
                 $discountPctItem  = $item['discount_pct'] ?? request()->input('white_discount_pct', 0);
                 if ($itemProfType === 'color') $discountPctItem = $item['discount_pct'] ?? request()->input('color_discount_pct', 0);
-                $netRate          = $rate * (1 - $discountPctItem / 100);
+                $netRate          = round($rate * (1 - $discountPctItem / 100));
                 $lineTotal        = round($totalLength * $netRate, 2);
             }
             // Per Kg pricing (Plastrong)
