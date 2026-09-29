@@ -163,12 +163,14 @@ class PIController extends Controller
         $cdDiscountPct    = $request->cd_discount_pct ?? 0;
         $discountAmount   = 0;
         $afterDiscount    = $subtotal;
-        $insurance        = round($afterDiscount * $insurancePct / 100, 2);
-        $taxableAmount    = $afterDiscount + $transport + $insurance;
+
+        // Sahi order: Subtotal → CD Discount → Insurance → Transport → GST
+        $cdDiscountAmount = round($afterDiscount * $cdDiscountPct / 100, 2);
+        $afterCd          = $afterDiscount - $cdDiscountAmount;
+        $insurance        = round($afterCd * $insurancePct / 100, 2);
+        $taxableAmount    = $afterCd + $transport + $insurance;
         $gstAmount        = round($taxableAmount * 0.18, 2);
-        $beforeCd         = round($taxableAmount + $gstAmount, 2);
-        $cdDiscountAmount = round($beforeCd * $cdDiscountPct / 100, 2);
-        $grandTotal       = round($beforeCd - $cdDiscountAmount, 2);
+        $grandTotal       = round($taxableAmount + $gstAmount, 2);
 
         return compact('transport', 'insurance', 'insurancePct', 'discountPct', 'discountAmount', 'cdDiscountPct', 'cdDiscountAmount', 'gstAmount', 'grandTotal');
     }

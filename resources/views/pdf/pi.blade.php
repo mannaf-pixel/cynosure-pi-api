@@ -159,17 +159,26 @@ body { font-family: DejaVu Sans, sans-serif; font-size:11px; color:#1a1a1a; }
   $colorProportion = $totalSubtotal > 0 ? $colorSubtotal / $totalSubtotal : 0;
   $hwProportion    = $totalSubtotal > 0 ? $hwSubtotal / $totalSubtotal : 0;
 
-  $whiteAfterDiscount = round($whiteSubtotal - ($discountAmt * $whiteProportion), 2);
-  $colorAfterDiscount = round($colorSubtotal - ($discountAmt * $colorProportion), 2);
-  $hwAfterDiscount    = round($hwSubtotal - ($discountAmt * $hwProportion), 2);
+  // Sahi order: Subtotal → CD Discount → Insurance → GST
+  $cdDiscountPct    = floatval($pi->cd_discount_pct ?? 0);
+  $cdDiscountAmt    = round($totalSubtotal * $cdDiscountPct / 100, 2);
+  $afterCd          = $totalSubtotal - $cdDiscountAmt;
 
-  $whiteGst = round($whiteAfterDiscount * 0.18, 2);
-  $colorGst = round($colorAfterDiscount * 0.18, 2);
-  $hwGst    = round($hwAfterDiscount * 0.18, 2);
+  $whiteProportion = $totalSubtotal > 0 ? $whiteSubtotal / $totalSubtotal : 0;
+  $colorProportion = $totalSubtotal > 0 ? $colorSubtotal / $totalSubtotal : 0;
+  $hwProportion    = $totalSubtotal > 0 ? $hwSubtotal / $totalSubtotal : 0;
 
-  $whiteTotal = $whiteAfterDiscount + $whiteGst;
-  $colorTotal = $colorAfterDiscount + $colorGst;
-  $hwTotal    = $hwAfterDiscount + $hwGst;
+  $whiteAfterCd = round($afterCd * $whiteProportion, 2);
+  $colorAfterCd = round($afterCd * $colorProportion, 2);
+  $hwAfterCd    = round($afterCd * $hwProportion, 2);
+
+  $whiteGst = round($whiteAfterCd * 0.18, 2);
+  $colorGst = round($colorAfterCd * 0.18, 2);
+  $hwGst    = round($hwAfterCd * 0.18, 2);
+
+  $whiteTotal = $whiteAfterCd + $whiteGst;
+  $colorTotal = $colorAfterCd + $colorGst;
+  $hwTotal    = $hwAfterCd + $hwGst;
 
   $whiteWeight = $whiteItems->sum('total_weight');
   $colorWeight = $colorItems->sum('total_weight');
@@ -382,15 +391,16 @@ body { font-family: DejaVu Sans, sans-serif; font-size:11px; color:#1a1a1a; }
   <tr><td>Total Kg</td><td class="right">{{ number_format($pi->items->sum('total_weight'), 3) }} kg</td></tr>
   @endif
   <tr><td>Subtotal</td><td class="right">Rs. {{ number_format($pi->subtotal, 2) }}</td></tr>
-  <tr><td>Transport Charge</td><td class="right">Rs. {{ number_format($pi->transport_charge, 2) }}</td></tr>
-  <tr><td>Insurance Charge</td><td class="right">Rs. {{ number_format($pi->insurance_charge, 2) }}</td></tr>
-  <tr><td>GST @ 18%</td><td class="right">Rs. {{ number_format($pi->gst_amount, 2) }}</td></tr>
   @if($pi->cd_discount_pct > 0)
   <tr>
     <td style="color:#7B1FA2;font-weight:bold;">CD Discount ({{ number_format($pi->cd_discount_pct, 2) }}%)</td>
     <td class="right" style="color:#7B1FA2;font-weight:bold;">- Rs. {{ number_format($pi->cd_discount_amount, 2) }}</td>
   </tr>
+  <tr><td style="color:#555;">After CD Amount</td><td class="right" style="color:#555;">Rs. {{ number_format($pi->subtotal - $pi->cd_discount_amount, 2) }}</td></tr>
   @endif
+  <tr><td>Transport Charge</td><td class="right">Rs. {{ number_format($pi->transport_charge, 2) }}</td></tr>
+  <tr><td>Insurance Charge</td><td class="right">Rs. {{ number_format($pi->insurance_charge, 2) }}</td></tr>
+  <tr><td>GST @ 18%</td><td class="right">Rs. {{ number_format($pi->gst_amount, 2) }}</td></tr>
   <tr>
     <td style="background:{{ $company['color'] }};color:#fff;font-weight:bold;padding:6px 10px;">GRAND TOTAL</td>
     <td class="right" style="background:{{ $company['color'] }};color:#fff;font-weight:bold;padding:6px 10px;">Rs. {{ number_format($pi->grand_total, 2) }}</td>
