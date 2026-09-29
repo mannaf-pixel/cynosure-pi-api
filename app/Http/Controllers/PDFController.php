@@ -95,19 +95,28 @@ class PDFController extends Controller
 
         $isPlastrong = $brandData['pricing_mode'] === 'per_kg';
 
+        $isInternal  = (bool) $request->query('internal', false);
+        $showWeight  = $isInternal || (bool) $request->query('show_weight', false);
+        $filename    = $isInternal
+            ? 'PI-'.$pi->pi_number.'-internal.pdf'
+            : 'PI-'.$pi->pi_number.'.pdf';
+
         $data = [
-            'pi'          => $pi,
-            'show_weight' => (bool) $request->query('show_weight', false),
-            'is_plastrong'=> $isPlastrong,
-            'company'     => $brandData,
-            'logo_base64' => $logoBase64,
+            'pi'           => $pi,
+            'show_weight'  => $showWeight,
+            'is_internal'  => $isInternal,
+            'is_plastrong' => $isPlastrong,
+            'company'      => $brandData,
+            'logo_base64'  => $logoBase64,
+            'discountPct'  => $pi->discount_pct ?? 0,
+            'discountAmt'  => $pi->discount_amount ?? 0,
         ];
 
         $pdf = Pdf::loadView('pdf.pi', $data)->setPaper('a4', 'portrait');
 
         return response($pdf->output(), 200)
             ->header('Content-Type', 'application/pdf')
-            ->header('Content-Disposition', 'attachment; filename="PI-'.$pi->pi_number.'.pdf"')
+            ->header('Content-Disposition', 'attachment; filename="'.$filename.'"')
             ->header('Access-Control-Allow-Origin', '*')
             ->header('Access-Control-Allow-Headers', '*')
             ->header('Access-Control-Expose-Headers', 'Content-Disposition');
