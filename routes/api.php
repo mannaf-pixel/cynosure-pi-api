@@ -5,6 +5,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\PIController;
 use App\Http\Controllers\QuotationController;
+use App\Http\Controllers\QuotationPDFController;
 use App\Http\Controllers\StockController;
 use App\Http\Controllers\PDFController;
 use Illuminate\Support\Facades\Route;
@@ -22,6 +23,9 @@ Route::get('/v1/ping', function () {
 Route::prefix('v1/auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
 });
+
+// Quotation PDF - public route (token via query)
+Route::get('/v1/quotation/{id}/pdf', [QuotationPDFController::class, 'generate']);
 
 // Protected Routes
 Route::prefix('v1')->middleware('auth:api')->group(function () {
