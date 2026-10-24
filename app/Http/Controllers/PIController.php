@@ -531,7 +531,7 @@ class PIController extends Controller
     // Dispatch Manager — Dispatch karo
     public function dispatch(Request $request, $id)
     {
-        $pi   = PiMaster::findOrFail($id);
+        $pi   = PiMaster::with('items')->findOrFail($id);
         $user = auth('api')->user();
 
         if (!in_array($user->role, ['admin', 'dispatch_manager'])) {
@@ -540,6 +540,55 @@ class PIController extends Controller
 
         if ($pi->status !== 'payment_confirmed') {
             return response()->json(['success' => false, 'message' => 'Sirf Payment Confirmed PI dispatch kar sakte hain.'], 422);
+        }
+
+        // Auto-deduct stock on dispatch
+        foreach ($pi->items as $item) {
+            if ($item->item_type === 'profile' && $item->product_id && $item->bundle_qty_ordered > 0) {
+                $stock = \App\Models\Stock::where('company_id', $pi->company_id)
+                    ->where('item_type', 'profile')
+                    ->where('product_id', $item->product_id)
+                    ->first();
+                if ($stock) {
+                    $before = $stock->quantity;
+                    $after  = max(0, $before - $item->bundle_qty_ordered);
+                    $stock->update(['quantity' => $after]);
+                    \App\Models\StockTransaction::create([
+                        'stock_id'        => $stock->id,
+                        'company_id'      => $pi->company_id,
+                        'type'            => 'out',
+                        'quantity'        => $item->bundle_qty_ordered,
+                        'quantity_before' => $before,
+                        'quantity_after'  => $after,
+                        'reference_type'  => 'pi',
+                        'reference_id'    => $pi->id,
+                        'note'            => 'Auto-deduct: PI ' . $pi->pi_number . ' dispatched',
+                        'created_by'      => $user->id,
+                    ]);
+                }
+            } elseif ($item->item_type === 'hardware' && $item->hardware_product_id && $item->quantity > 0) {
+                $stock = \App\Models\Stock::where('company_id', $pi->company_id)
+                    ->where('item_type', 'hardware')
+                    ->where('hardware_product_id', $item->hardware_product_id)
+                    ->first();
+                if ($stock) {
+                    $before = $stock->quantity;
+                    $after  = max(0, $before - $item->quantity);
+                    $stock->update(['quantity' => $after]);
+                    \App\Models\StockTransaction::create([
+                        'stock_id'        => $stock->id,
+                        'company_id'      => $pi->company_id,
+                        'type'            => 'out',
+                        'quantity'        => $item->quantity,
+                        'quantity_before' => $before,
+                        'quantity_after'  => $after,
+                        'reference_type'  => 'pi',
+                        'reference_id'    => $pi->id,
+                        'note'            => 'Auto-deduct: PI ' . $pi->pi_number . ' dispatched',
+                        'created_by'      => $user->id,
+                    ]);
+                }
+            }
         }
 
         // Handle file uploads
