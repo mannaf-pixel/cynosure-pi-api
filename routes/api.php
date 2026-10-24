@@ -139,22 +139,22 @@ Route::prefix('v1')->middleware('auth:api')->group(function () {
     Route::post('/hardware',             [\App\Http\Controllers\HardwareProductController::class, 'store'])->middleware('role:admin');
     Route::put('/hardware/{id}',         [\App\Http\Controllers\HardwareProductController::class, 'update'])->middleware('role:admin');
     Route::delete('/hardware/{id}',      [\App\Http\Controllers\HardwareProductController::class, 'destroy'])->middleware('role:admin');
+
+    // Quotation routes
+    Route::get('/quotations',                    [QuotationController::class, 'index']);
+    Route::post('/quotations',                   [QuotationController::class, 'store']);
+    Route::get('/quotations/{id}',               [QuotationController::class, 'show']);
+    Route::put('/quotations/{id}',               [QuotationController::class, 'update']);
+    Route::post('/quotations/{id}/status',       [QuotationController::class, 'updateStatus']);
+    Route::post('/quotations/{id}/convert-to-pi',[QuotationController::class, 'convertToPI']);
+    Route::delete('/quotations/{id}',            [QuotationController::class, 'destroy']);
+
+    // Stock routes
+    Route::get('/stock',                         [StockController::class, 'index']);
+    Route::post('/stock',                        [StockController::class, 'store']);
+    Route::put('/stock/{id}',                    [StockController::class, 'update']);
+    Route::post('/stock/{id}/add',               [StockController::class, 'addStock']);
+    Route::post('/stock/{id}/remove',            [StockController::class, 'removeStock']);
+    Route::get('/stock/{id}/transactions',       [StockController::class, 'transactions']);
+    Route::post('/stock/init-from-products',     [StockController::class, 'initFromProducts']);
 });
-
-        // Quotation routes
-        Route::get('/quotations',                    [QuotationController::class, 'index']);
-        Route::post('/quotations',                   [QuotationController::class, 'store']);
-        Route::get('/quotations/{id}',               [QuotationController::class, 'show']);
-        Route::put('/quotations/{id}',               [QuotationController::class, 'update']);
-        Route::post('/quotations/{id}/status',       [QuotationController::class, 'updateStatus']);
-        Route::post('/quotations/{id}/convert-to-pi',[QuotationController::class, 'convertToPI']);
-        Route::delete('/quotations/{id}',            [QuotationController::class, 'destroy']);
-
-        // Stock routes
-        Route::get('/stock',                         [StockController::class, 'index']);
-        Route::post('/stock',                        [StockController::class, 'store']);
-        Route::put('/stock/{id}',                    [StockController::class, 'update']);
-        Route::post('/stock/{id}/add',               [StockController::class, 'addStock']);
-        Route::post('/stock/{id}/remove',            [StockController::class, 'removeStock']);
-        Route::get('/stock/{id}/transactions',       [StockController::class, 'transactions']);
-        Route::post('/stock/init-from-products',     [StockController::class, 'initFromProducts']);
